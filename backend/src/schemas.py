@@ -1,9 +1,11 @@
 from pydantic import BaseModel
+import typing as tp
+
 
 class PredictionRequest(BaseModel):
-    gender: int
+    code_gender: int
     days_birth: int
-    amt_incomne_total: int
+    amt_income_total: int
     days_employed: int
     flag_own_car: bool
     flag_own_realty: bool
@@ -14,4 +16,9 @@ class PredictionRequest(BaseModel):
     cnt_children: int
     code_housing_type: int
     code_occupation_type: int
+
+
+class PredictionResponse(BaseModel):
+    pred: int
+    proba: float
     
