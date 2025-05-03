@@ -1,0 +1,31 @@
+curl -X POST "http://127.0.0.1:8000/explain" -H "Content-Type: application/json" -d '{
+    "code_gender": 1,
+    "flag_own_car": 1,
+    "flag_own_realty": 1,
+    "cnt_children": 1,
+    "amt_income_total": 270000,
+    "code_income_type": 2,
+    "code_education_type": 1,
+    "code_family_status": 2,
+    "code_housing_type": 1,
+    "days_birth": -10925,
+    "days_employed": -2481,
+    "code_occupation_type": 1,
+    "cnt_family_members": 2
+}'
+
+curl -X POST "http://127.0.0.1:8000/predict" -H "Content-Type: application/json" -d '{
+    "code_gender": 1,
+    "flag_own_car": 1,
+    "flag_own_realty": 1,
+    "cnt_children": 1,
+    "amt_income_total": 270000,
+    "code_income_type": 2,
+    "code_education_type": 1,
+    "code_family_status": 2,
+    "code_housing_type": 1,
+    "days_birth": -10925,
+    "days_employed": -2481,
+    "code_occupation_type": 1,
+    "cnt_family_members": 2
+}'

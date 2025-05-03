@@ -22,10 +22,21 @@ def preprocess_input(data: PredictionRequest) -> np.ndarray:
     return response.reshape(1, -1)
 
 class PredictCreditService:
-    def __init__(self, model):
-        self.classifier = model
+    def __init__(self, model: XGBoostModel):
+        self._classifier = model
     
     def predict(self, data: PredictionRequest):
         preprocessed_data = preprocess_input(data)
-        prediction = self.classifier.predict(preprocessed_data)
+        prediction = self._classifier.predict(preprocessed_data)
         return prediction['prediction'], prediction['probability']
+
+
+class ExplainResultsService:
+    def __init__(self, model: XGBoostModel):
+        self._classifier = model
+
+    def explain_prediction(self, data: PredictionRequest):
+        preprocessed_data = preprocess_input(data)
+        importance_levels = self._classifier.get_importance_values(preprocessed_data)
+        print(importance_levels)
+        return importance_levels
