@@ -2,7 +2,13 @@ from pydantic import BaseModel
 import typing as tp
 
 
+class User(BaseModel):
+    name: str
+    email: str
+
+
 class PredictionRequest(BaseModel):
+    user: User
     code_gender: int
     days_birth: int
     amt_income_total: int
@@ -37,4 +43,8 @@ class FeatureExplainLevels(BaseModel):
 class PredictionResponse(BaseModel):
     pred: int
     proba: float
+
+
+class CreditApplication(User):
+    text: str
     

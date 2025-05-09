@@ -1,30 +1,13 @@
-import numpy as np
 from backend.src.schemas import PredictionRequest
 from model.xgboost_classifier import XGBoostModel
+from backend.src.utils import preprocess_input
+from backend.src.db import ShelveDB
 
-def preprocess_input(data: PredictionRequest) -> np.ndarray:
-    response = np.array([
-        data.code_gender,
-        data.flag_own_car,
-        data.flag_own_realty,
-        data.cnt_children,
-        data.amt_income_total, 
-        data.code_income_type,
-        data.code_education_type,
-        data.code_family_status,
-        data.code_housing_type,
-        data.days_birth,
-        data.days_employed,
-        data.code_occupation_type,
-        data.cnt_family_members
-    ]).reshape(1, -1)
-
-    return response.reshape(1, -1)
 
 class PredictCreditService:
     def __init__(self, model: XGBoostModel):
         self._classifier = model
-    
+
     def predict(self, data: PredictionRequest):
         preprocessed_data = preprocess_input(data)
         prediction = self._classifier.predict(preprocessed_data)
@@ -40,3 +23,18 @@ class ExplainResultsService:
         importance_levels = self._classifier.get_importance_values(preprocessed_data)
         print(importance_levels)
         return importance_levels
+    
+
+class UserDataService:
+    def __init__(self, db: ShelveDB):
+        self._db = db
+    
+    def store_data(self, data: PredictionRequest):
+        user_key = data.user.model_dump_json()
+
+        value_data = data.model_dump()
+        value_data.pop("user")
+        try:
+            self._db.write(user_key, value_data)
+        except Exception as e:
+            print(str(e))
