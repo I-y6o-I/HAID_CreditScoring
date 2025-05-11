@@ -1,4 +1,4 @@
-from backend.src.schemas import PredictionRequest, User
+from backend.src.schemas import PredictionRequest, User, CreditApplication
 from model.xgboost_classifier import XGBoostModel
 from backend.src.utils import preprocess_input, hash_user_key
 from backend.src.db import ShelveDB
@@ -36,5 +36,17 @@ class UserDataService:
         value_data.pop("user")
         try:
             self._db.write(user_key, value_data)
+        except Exception as e:
+            print(str(e))
+
+
+class CreditApplicationService:
+    def __init__(self, db: ShelveDB):
+        self._db = db
+    
+    def create_application(self, data: CreditApplication):
+        user: User = data.user.model_dump_json()
+        try:
+            self._db.write(user, data.text)
         except Exception as e:
             print(str(e))
