@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from greetings import greetings_page
 
-# Constants and settings
 INCOME_TYPES = {
     "Commercial associate": 0,
     "Pensioner": 1,
@@ -83,7 +82,6 @@ EMPLOYMENT_DURATION = {
 API_BASE_URL = "http://localhost:8000"
 requests_session = requests.Session()
 
-# Page settings
 st.set_page_config(
     page_title="Credit Scoring System",
     page_icon="🏠",
@@ -91,8 +89,6 @@ st.set_page_config(
 )
 
 def plot_feature_importance(importances):
-    """Dark theme feature importance visualization for Streamlit"""
-    # Dark theme color scheme
     BG_COLOR = "#0e1117"       # Streamlit dark background
     WIDGET_BG = "#262730"      # Streamlit widget background
     TEXT_COLOR = "#fafafa"     # Light text for contrast
@@ -101,12 +97,11 @@ def plot_feature_importance(importances):
     GRID_COLOR = "#555555"     # Dark grid lines
     BAR_EDGE = "#444444"       # Bar edge color
 
-    # Create figure with dark theme
-    plt.style.use('dark_background')
     fig = plt.figure(figsize=(10, 6), facecolor=BG_COLOR, dpi=100)
-    ax = fig.add_subplot(facecolor=WIDGET_BG)
+    ax = fig.add_subplot(facecolor=BG_COLOR)
+    fig.patch.set_facecolor(BG_COLOR)
+
     
-    # Feature name mappings
     feature_names = {
         'amt_income_total': 'Annual Income',
         'code_income_type': 'Income Type',
@@ -122,14 +117,12 @@ def plot_feature_importance(importances):
         'code_occupation_type': 'Occupation'
     }
 
-    # Prepare data
     df = pd.DataFrame({
         'Factor': [feature_names.get(col, col) for col in importances.index],
         'Impact': importances.values,
         'Effect': ['Positive' if x > 0 else 'Negative' for x in importances.values]
     }).sort_values('Impact', key=abs, ascending=False)
 
-    # Create plot with dark theme styling
     sns.barplot(
         data=df,
         x='Impact',
@@ -143,13 +136,11 @@ def plot_feature_importance(importances):
         saturation=0.9
     )
 
-    # Dark theme styling
     ax.set_title('Credit Decision Factors', 
                 pad=20, fontsize=14, color=TEXT_COLOR, fontweight='bold')
     ax.set_xlabel('Impact Score', fontsize=12, color=TEXT_COLOR)
     ax.set_ylabel('')
     
-    # Customize appearance
     ax.tick_params(axis='both', colors=TEXT_COLOR, labelsize=10)
     for spine in ax.spines.values():
         spine.set_color(GRID_COLOR)
@@ -157,7 +148,6 @@ def plot_feature_importance(importances):
     ax.axvline(0, color=TEXT_COLOR, linestyle='--', linewidth=1.0, alpha=0.8)
     ax.grid(axis='x', color=GRID_COLOR, linestyle=':', linewidth=0.7, alpha=0.8)
 
-    # Legend styling
     legend = ax.legend(
         title='Impact Direction',
         facecolor=WIDGET_BG,
@@ -226,7 +216,6 @@ def show_feedback_form(user_data=None):
                 except Exception as e:
                     st.error(f"Connection error: {str(e)}")
 
-# Main app logic
 if "page" not in st.session_state:
     st.session_state["page"] = "greetings"
     st.session_state["show_feedback"] = False
@@ -235,7 +224,6 @@ if "page" not in st.session_state:
 if st.session_state["page"] == "greetings":
     greetings_page()
 elif st.session_state["page"] == "main":
-    # Header with Home button
     col1, col2 = st.columns([1, 10])
     with col1:
         if st.button("🏠 Home"):
@@ -264,7 +252,7 @@ elif st.session_state["page"] == "main":
             flag_own_car = st.selectbox("Owns a Car", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             flag_own_realty = st.selectbox("Owns Property", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             cnt_children = st.number_input("Number of Children", min_value=0, value=0)
-            amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000)
+            amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000, step=10000)
 
         with col2:
             email = st.text_input("Email")
@@ -336,7 +324,6 @@ elif st.session_state["page"] == "main":
             
             st.session_state["show_feedback"] = True
 
-    # Feedback form
     if st.session_state.get("show_feedback") and st.session_state.get("application_data"):
         show_feedback_form(st.session_state["application_data"])
         
