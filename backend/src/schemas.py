@@ -51,4 +51,5 @@ class CreditApplication(BaseModel):
 class ModelReport(BaseModel):
     user: User
     text: str
+    issue_type: str
     

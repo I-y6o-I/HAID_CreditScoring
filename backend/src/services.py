@@ -59,6 +59,6 @@ class ReportModelService:
     def report_model(self, data: schemas.ModelReport):
         user: schemas.User = data.user.model_dump_json()
         try:
-            self._db.write(user, data.text)
+            self._db.write(user, {"issue_type": data.issue_type, "text": data.text})
         except Exception as e:
             print(str(e))
