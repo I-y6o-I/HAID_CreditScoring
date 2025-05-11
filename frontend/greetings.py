@@ -11,7 +11,7 @@ def greetings_page():
             margin-bottom: 2rem;
         }
         .welcome-header {
-            color: #2c3e50;
+            color: #2c3e50 !important;
             text-align: center;
             margin-bottom: 1.5rem;
         }
@@ -21,12 +21,18 @@ def greetings_page():
             border-radius: 10px;
             margin-bottom: 1rem;
             border-left: 4px solid #3498db;
+            color: #333333 !important;
         }
         .ethics-section {
             background-color: #f8f9fa;
             padding: 1.5rem;
             border-radius: 10px;
             margin-top: 1.5rem;
+            color: #333333 !important;
+        }
+        .stButton>button {
+            background-color: #3498db !important;
+            color: white !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -36,15 +42,15 @@ def greetings_page():
     
     st.markdown("""
     <div class="feature-card">
-        <h3>Why use our service?</h3>
-        <p>Get instant credit approval predictions with transparent explanations of the factors influencing the decision.</p>
+        <h3 style="color: #2c3e50 !important;">Why use our service?</h3>
+        <p style="color: #333333 !important;">Get instant credit approval predictions with transparent explanations.</p>
     </div>
     """, unsafe_allow_html=True)
 
     cols = st.columns(3)
     features = [
         ("⚡ Fast", "Get results in seconds"),
-        ("🔍 Transparent", "Understand why decisions are made"),
+        ("🔍 Transparent", "Understand decisions"),
         ("🛡️ Secure", "Your data is protected")
     ]
     
@@ -52,17 +58,17 @@ def greetings_page():
         with cols[i]:
             st.markdown(f"""
             <div class="feature-card">
-                <h4>{icon}</h4>
-                <p>{text}</p>
+                <h4 style="color: #2c3e50 !important;">{icon}</h4>
+                <p style="color: #333333 !important;">{text}</p>
             </div>
             """, unsafe_allow_html=True)
 
     st.markdown("""
     <div class="ethics-section">
-        <h3>Our Principles</h3>
-        <ul>
-            <li><strong>Fairness:</strong> The model is regularly audited for bias</li>
-            <li><strong>Transparency:</strong> Clear explanations of all decisions</li>
+        <h3 style="color: #2c3e50 !important;">Our Principles</h3>
+        <ul style="color: #333333 !important;">
+            <li><strong>Fairness:</strong> Regular bias audits</li>
+            <li><strong>Transparency:</strong> Clear explanations</li>
             <li><strong>Privacy:</strong> You control your data</li>
         </ul>
     </div>

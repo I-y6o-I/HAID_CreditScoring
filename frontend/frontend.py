@@ -2,10 +2,33 @@
 import streamlit as st
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
-from greetings import greetings_page
-import json
+from pydantic import BaseModel, ValidationError
+from typing import Optional
 
+# Удаляем все импорты связанные с backend
+# Добавляем модели данных которые раньше были в backend
+
+class UserData(BaseModel):
+    name: str
+    email: str
+
+class PredictionRequest(BaseModel):
+    code_gender: int
+    days_birth: int
+    amt_income_total: float
+    days_employed: int
+    flag_own_car: bool
+    flag_own_realty: bool
+    code_income_type: int
+    code_education_type: int
+    code_family_status: int
+    code_housing_type: int
+    code_occupation_type: int
+    cnt_family_members: int
+    cnt_children: int
+    user: UserData
+
+# Конфигурация и стили остаются без изменений
 COLORS = {
     "primary": "#3498db",
     "secondary": "#2ecc71",
@@ -16,6 +39,7 @@ COLORS = {
     "text": "#333333",
     "background": "#f8f9fa"
 }
+
 def set_global_styles():
     st.markdown("""
     <style>
@@ -51,7 +75,7 @@ def set_global_styles():
         }
     </style>
     """, unsafe_allow_html=True)
-# Конфигурация страницы
+
 st.set_page_config(
     page_title="Credit Scoring AI",
     page_icon="💳",
@@ -59,7 +83,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Стили CSS
 def load_css():
     st.markdown("""
     <style>
@@ -154,37 +177,41 @@ CODE_OCCUPATION_TYPE = {
 API_BASE_URL = "http://localhost:8000"
 requests_session = requests.Session()
 
-import streamlit as st
-import requests
-
-API_BASE_URL = "http://localhost:8000"
+def greetings_page():
+    st.title("Welcome to Credit Scoring AI")
+    st.write("This application helps you evaluate your creditworthiness.")
+    
+    if st.button("Get Started"):
+        st.session_state["page"] = "consent"
+        st.rerun()
 
 def data_consent_page():
     st.markdown("""
     <style>
         .consent-container {
             background-color: #ffffff;
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin: 0 auto;
             max-width: 800px;
         }
         .consent-header {
-            color: #2c3e50;
+            color: #2c3e50 !important;
             text-align: center;
             margin-bottom: 1.5rem;
         }
-        .consent-question {
-            color: #2c3e50;
-            font-size: 1.1rem;
+        .consent-description {
+            color: #2c3e50 !important;
             margin-bottom: 1.5rem;
         }
-        .consent-option {
-            margin: 1rem 0;
-            padding: 0.8rem;
-            background-color: #f8f9fa;
+        .stRadio > div {
+            padding: 10px;
             border-radius: 8px;
+        }
+        .stButton>button {
+            background-color: #3498db !important;
+            color: white !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -193,254 +220,286 @@ def data_consent_page():
     st.markdown('<h2 class="consent-header">🔒 Data Consent</h2>', unsafe_allow_html=True)
     
     st.markdown("""
-    <div class="feature-card">
+    <p class="consent-description">
         To improve our service, we'd like to store your application data anonymously. 
         This helps us make our model fairer and more accurate over time.
-    </div>
+    </p>
     """, unsafe_allow_html=True)
 
-    st.markdown('<p class="consent-question">Do you agree to store your data anonymously?</p>', unsafe_allow_html=True)
-    
     consent = st.radio(
-        "",
+        "Do you agree to store your data anonymously?",
         options=["Yes", "No"],
         index=None,
-        key="data_consent_radio",
-        format_func=lambda x: f'<div class="consent-option">{x}</div>',
-        unsafe_allow_html=True
+        key="data_consent_radio"
     )
     
-    if consent is not None:
-        if st.button("Continue", key="consent_continue_btn"):
-            try:
-                response = requests_session.post(
-                    f"{API_BASE_URL}/api/consent",
-                    json={"consent": consent == "Yes"}
+    if consent is not None and st.button("Continue", key="consent_continue_btn"):
+        try:
+            # Преобразуем выбор в строку 'true'/'false' как требуется API
+            store_data = 'true' if consent == 'Yes' else 'false'
+            
+            # Отправляем запрос с query-параметром
+            response = requests_session.post(
+                f"{API_BASE_URL}/update-settings?store_data={store_data}",
+                timeout=5
+            )
+            
+            # Проверяем ответ
+            if response.status_code == 200:
+                st.session_state["consent_given"] = consent == "Yes"
+                st.session_state["page"] = "main"
+                st.rerun()
+            else:
+                st.error(
+                    f"Error saving preference. "
+                    f"Status code: {response.status_code}, "
+                    f"Response: {response.text}"
                 )
-                if response.status_code == 200:
-                    st.session_state["consent_given"] = consent == "Yes"
-                    st.session_state["page"] = "main"
-                    st.rerun()
-                else:
-                    st.error("Error saving your preference")
-            except:
-                st.error("Could not connect to server")
+                
+        except requests.exceptions.RequestException as e:
+            st.error(f"Connection error: {str(e)}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {str(e)}")
     
     st.markdown('</div>', unsafe_allow_html=True)
 def main_page():
     st.markdown("""
     <style>
-        .form-container {
-            background-color: #ffffff;
-            padding: 2rem;
+        /* Основные стили */
+        html, body, .stApp {
+            background-color: #f5f5f5 !important;
+            color: #333333 !important;
+        }
+        
+        /* Карточки */
+        .form-container, .result-card {
+            background-color: #ffffff !important;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .form-header {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 0.5rem;
+            padding: 2rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
         }
-        .form-section {
-            margin-bottom: 2rem;
+        
+        /* Текст */
+        h1, h2, h3, h4, h5, h6, p, div, span, label {
+            color: #333333 !important;
         }
-        .form-footer {
-            margin-top: 1.5rem;
+        
+        /* Элементы формы */
+        .stTextInput input, .stNumberInput input, 
+        .stSelectbox select, .stSlider div {
+            color: #333333 !important;
+            background-color: #ffffff !important;
         }
-        .stTextInput>div>div>input {
-            background-color: #f8f9fa;
+        
+        /* Кнопки */
+        .stButton>button {
+            background-color: #3498db !important;
+            color: white !important;
+            border: none;
+            font-weight: bold;
+        }
+        
+        /* Чекбоксы */
+        .stCheckbox>label {
+            color: #333333 !important;
+        }
+        
+        /* Статусы */
+        .positive {
+            color: #27ae60 !important;
+            font-weight: bold;
+        }
+        .negative {
+            color: #e74c3c !important;
+            font-weight: bold;
         }
     </style>
     """, unsafe_allow_html=True)
 
     st.title("💳 Credit Scoring Assessment")
     
-    cols = st.columns([1,1,1,1])
-    with cols[0]:
-        if st.button("🏠 Home"):
-            st.session_state["page"] = "greetings"
-            st.rerun()
-    with cols[1]:
-        if st.button("📊 Model Report"):
-            st.session_state["page"] = "report"
-            st.rerun()
+    if st.button("🏠 Home"):
+        st.session_state["page"] = "greetings"
+        st.rerun()
     
+    # Форма ввода данных
     with st.container():
         st.markdown('<div class="form-container">', unsafe_allow_html=True)
         
         with st.form("credit_form"):
-            st.markdown('<h3 class="form-header">🔍 Personal Information</h3>', unsafe_allow_html=True)
+            st.markdown('<h3>Personal Information</h3>', unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             with col1:
-                name = st.text_input("Full Name")
-                gender = st.selectbox("Gender", options=["Male", "Female"])
-                age = st.slider("Age", 18, 70, 30)
+                name = st.text_input("Full Name", key="name_input")
+                gender_option = st.selectbox("Gender", options=["Male", "Female"], key="gender_select")
+                code_gender = 1 if gender_option == "Male" else 0
+                days_birth = st.slider("Age (in days)", 0, 30000, 10000, key="age_slider")
+                cnt_children = st.number_input("Number of Children", min_value=0, value=0, key="children_input")
                 
             with col2:
-                email = st.text_input("Email")
-                income = st.number_input("Annual Income ($)", min_value=0, value=50000)
-                income_type = st.selectbox("Income Source", options=list(CODE_INCOME_TYPE.keys()))
+                email = st.text_input("Email", key="email_input")
+                amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000, key="income_input")
+                income_type = st.selectbox("Income Type", options=list(CODE_INCOME_TYPE.keys()), key="income_type_select")
+                code_income_type = CODE_INCOME_TYPE[income_type]
             
-            st.markdown('<h3 class="form-header">Additional Information</h3>', unsafe_allow_html=True)
+            st.markdown('<h3>Additional Information</h3>', unsafe_allow_html=True)
             
             col3, col4 = st.columns(2)
             with col3:
-                education = st.selectbox("Education Level", options=list(CODE_EDUCATION_TYPE.keys()))
-                family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()))
-                owns_car = st.checkbox("Owns a Car")
+                education_type = st.selectbox("Education", options=list(CODE_EDUCATION_TYPE.keys()), key="education_select")
+                code_education_type = CODE_EDUCATION_TYPE[education_type]
+                family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()), key="family_select")
+                code_family_status = CODE_FAMILY_STATUS[family_status]
+                cnt_family_members = st.number_input("Family Members", min_value=1, value=1, key="family_members_input")
                 
             with col4:
-                housing = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
-                occupation = st.selectbox("Occupation", options=list(CODE_OCCUPATION_TYPE.keys()))
-                owns_realty = st.checkbox("Owns Property")
+                housing_type = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()), key="housing_select")
+                code_housing_type = CODE_HOUSING_TYPE[housing_type]
+                occupation_type = st.selectbox("Occupation", options=list(CODE_OCCUPATION_TYPE.keys()), key="occupation_select")
+                code_occupation_type = CODE_OCCUPATION_TYPE[occupation_type]
+                days_employed = st.slider("Employment Duration (days)", 0, 20000, 1000, key="employed_slider")
             
-            st.markdown('<div class="form-footer">', unsafe_allow_html=True)
-            submitted = st.form_submit_button("Evaluate Credit Score")
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Чекбоксы с подписями
+            flag_own_car = st.checkbox("I own a car", key="car_checkbox")
+            flag_own_realty = st.checkbox("I own real estate property", key="realty_checkbox")
+            
+            submitted = st.form_submit_button("Evaluate Credit Score", type="primary")
         
         st.markdown('</div>', unsafe_allow_html=True)
     
+    # Обработка результатов
     if submitted:
-        input_payload = {
-            "code_gender": 1 if gender == "Male" else 0,
-            "days_birth": (70 - age) * 365,  # Примерное преобразование
-            "amt_income_total": income,
-            "days_employed": experience * 365,
-            "flag_own_car": int(owns_car),
-            "flag_own_realty": int(owns_realty),
-            "code_income_type": CODE_INCOME_TYPE[income_type],
-            "code_education_type": CODE_EDUCATION_TYPE[education],
-            "code_family_status": CODE_FAMILY_STATUS[family_status],
-            "code_housing_type": CODE_HOUSING_TYPE[housing],
-            "code_occupation_type": CODE_OCCUPATION_TYPE[occupation],
-            "cnt_family_members": family_members,
-            "cnt_children": children
-        }
-        
-        with st.spinner("Evaluating your credit score..."):
-            try:
-                # Отправка данных для предсказания
-                predict_response = requests_session.post(
-                    f"{API_BASE_URL}/api/predict", 
-                    json=input_payload
+        try:
+            request_data = {
+                "code_gender": code_gender,
+                "days_birth": days_birth,
+                "amt_income_total": float(amt_income_total),
+                "days_employed": days_employed,
+                "flag_own_car": flag_own_car,
+                "flag_own_realty": flag_own_realty,
+                "code_income_type": code_income_type,
+                "code_education_type": code_education_type,
+                "code_family_status": code_family_status,
+                "code_housing_type": code_housing_type,
+                "code_occupation_type": code_occupation_type,
+                "cnt_family_members": cnt_family_members,
+                "cnt_children": cnt_children,
+                "user": {
+                    "name": name,
+                    "email": email
+                }
+            }
+            
+            with st.spinner("Processing your application..."):
+                response = requests_session.post(
+                    f"{API_BASE_URL}/predict",
+                    json=request_data,
+                    timeout=10
                 )
-                result = predict_response.json()
                 
-                # Отображение результатов
-                st.subheader("📊 Credit Decision")
-                proba = result.get("probability", 0.5)
-                decision = result.get("prediction", 0)
+                if response.status_code == 200:
+                    result = response.json()
+                    st.session_state["last_result"] = result
+                    
+                    prediction = result.get("pred", 0)
+                    probability = result.get("proba", 0.0)
+                    
+                    with st.container():
+                        st.markdown('<div class="result-card">', unsafe_allow_html=True)
+                        
+                        if prediction == 1:
+                            st.markdown(f'<h3 class="positive">Approved ({(probability*100):.1f}%)</h3>', 
+                                      unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<h3 class="negative">Denied ({(100 - probability*100):.1f}%)</h3>', 
+                                      unsafe_allow_html=True)
+                        
+                        if st.button("Provide feedback about this decision"):
+                            st.session_state["page"] = "feedback"
+                            st.rerun()
+                        
+                        st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.error(f"API Error: {response.status_code} - {response.text}")
                 
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Approval Probability", f"{proba*100:.1f}%")
-                with col2:
-                    st.metric("Decision", "Approved" if decision == 1 else "Declined")
-                
-                # Визуализация важности фич
-                st.subheader("📈 Key Influencing Factors")
-                importance_data = {k: v for k, v in result.items() 
-                                 if k not in ["prediction", "probability"]}
-                
-                # Группировка по категориям
-                personal_factors = {
-                    "Age": importance_data.get("days_birth", 0),
-                    "Gender": importance_data.get("code_gender", 0),
-                    "Education": importance_data.get("code_education_type", 0)
-                }
-                
-                financial_factors = {
-                    "Income": importance_data.get("amt_income_total", 0),
-                    "Income Type": importance_data.get("code_income_type", 0),
-                    "Property Ownership": importance_data.get("flag_own_realty", 0)
-                }
-                
-                # Визуализация
-                tab1, tab2 = st.tabs(["Personal Factors", "Financial Factors"])
-                
-                with tab1:
-                    fig, ax = plt.subplots()
-                    pd.Series(personal_factors).sort_values().plot(
-                        kind='barh', 
-                        color=['#2ecc71' if x > 0 else '#e74c3c' for x in personal_factors.values()],
-                        ax=ax
-                    )
-                    ax.set_title("Personal Factors Impact")
-                    st.pyplot(fig)
-                
-                with tab2:
-                    fig, ax = plt.subplots()
-                    pd.Series(financial_factors).sort_values().plot(
-                        kind='barh',
-                        color=['#2ecc71' if x > 0 else '#e74c3c' for x in financial_factors.values()],
-                        ax=ax
-                    )
-                    ax.set_title("Financial Factors Impact")
-                    st.pyplot(fig)
-                
-                # Сохранение данных (если пользователь согласился)
-                if st.session_state.get("consent_given", False):
-                    try:
-                        requests_session.post(
-                            f"{API_BASE_URL}/api/store_data",
-                            json={
-                                "user_input": input_payload,
-                                "prediction_result": result
-                            }
-                        )
-                    except:
-                        st.warning("Could not save your data")
-                
-            except Exception as e:
-                st.error(f"Error during prediction: {str(e)}")
-
-def model_report_page():
-    st.title("📊 Model Report")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Connection error: {str(e)}")
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
     
-    cols = st.columns([1,1,1,1])
-    with cols[0]:
-        if st.button("🏠 Home"):
-            st.session_state["page"] = "greetings"
-            st.rerun()
+    # Показываем последний результат при обновлении страницы
+    if "last_result" in st.session_state:
+        result = st.session_state["last_result"]
+        with st.container():
+            st.markdown('<div class="result-card">', unsafe_allow_html=True)
+            
+            prediction = result.get("pred", 0)
+            probability = result.get("proba", 0.0)
+            
+            if prediction == 1:
+                st.markdown(f'<h3 class="positive">Approved ({(probability*100):.1f}%)</h3>', 
+                          unsafe_allow_html=True)
+            else:
+                st.markdown(f'<h3 class="negative">Denied ({(100 - probability*100):.1f}%)</h3>', 
+                          unsafe_allow_html=True)
+            
+            if st.button("Provide feedback about this result"):
+                st.session_state["page"] = "feedback"
+                st.rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+                
+def feedback_page():
+    st.title("📝 Model Feedback")
     
     st.markdown("""
-    <div class="feature-card">
-        This section provides transparency about the AI model used for credit scoring.
-    </div>
+    <style>
+        .feedback-form {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+    </style>
     """, unsafe_allow_html=True)
     
-    try:
-        # Получение информации о модели
-        response = requests_session.get(f"{API_BASE_URL}/api/model-info")
-        model_info = response.json()
+    with st.container():
+        st.markdown('<div class="feedback-form">', unsafe_allow_html=True)
         
-        st.subheader("Model Characteristics")
-        st.json(model_info)
+        st.write("Help us improve our credit scoring model by providing your feedback!")
         
-        st.subheader("Performance Metrics")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Accuracy", "87%")
-        col2.metric("Precision", "85%")
-        col3.metric("Fairness Score", "92%")
+        with st.form("feedback_form"):
+            feedback_type = st.selectbox(
+                "Type of feedback",
+                options=["Incorrect decision", "Model accuracy", "Feature importance", "Other"]
+            )
+            
+            feedback_text = st.text_area("Your detailed feedback", height=150)
+            
+            email = st.text_input("Email (optional, if you want us to follow up)")
+            
+            submitted = st.form_submit_button("Submit Feedback")
+            
+            if submitted:
+                # Здесь можно добавить логику отправки фидбека
+                st.success("Thank you for your feedback! We'll use it to improve our model.")
+                time.sleep(2)
+                st.session_state["page"] = "main"
+                st.rerun()
         
-        st.subheader("Feature Importance Overview")
-        st.image("https://via.placeholder.com/800x400.png?text=Feature+Importance+Heatmap", 
-                use_column_width=True)
-        
-        st.subheader("Bias Audit Results")
-        st.write("The model has been tested for potential biases across different demographic groups:")
-        st.success("✅ No significant gender bias detected")
-        st.success("✅ No significant age bias detected")
-        st.warning("⚠️ Slight bias detected for income groups")
-        
-    except:
-        st.error("Could not load model information")
-
-# Главный цикл приложения
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.button("Back to Main Page"):
+        st.session_state["page"] = "main"
+        st.rerun()
+    
 def main():
     load_css()
+    set_global_styles()
     
     if "page" not in st.session_state:
         st.session_state["page"] = "greetings"
@@ -451,8 +510,8 @@ def main():
         data_consent_page()
     elif st.session_state["page"] == "main":
         main_page()
-    elif st.session_state["page"] == "report":
-        model_report_page()
+    elif st.session_state["page"] == "feedback":
+        feedback_page()
 
 if __name__ == "__main__":
     main()
