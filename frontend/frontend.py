@@ -4,6 +4,7 @@ import requests
 import matplotlib.pyplot as plt
 from greetings import greetings_page
 
+# Константы и настройки
 CODE_INCOME_TYPE = {
     "Commercial associate": 0,
     "Pensioner": 1,
@@ -11,6 +12,7 @@ CODE_INCOME_TYPE = {
     "Student": 3,
     "Working": 4,
 }
+
 CODE_EDUCATION_TYPE = {
     "Academic degree": 0,
     "Higher education": 1,
@@ -18,6 +20,7 @@ CODE_EDUCATION_TYPE = {
     "Lower secondary": 3,
     "Secondary / secondary special": 4,
 }
+
 CODE_FAMILY_STATUS = {
     "Civil marriage": 0,
     "Married": 1,
@@ -25,6 +28,7 @@ CODE_FAMILY_STATUS = {
     "Single / not married": 3,
     "Widow": 4,
 }
+
 CODE_HOUSING_TYPE = {
     "Co-op apartment": 0,
     "House / apartment": 1,
@@ -33,6 +37,7 @@ CODE_HOUSING_TYPE = {
     "Rented apartment": 4,
     "With parents": 5,
 }
+
 CODE_OCCUPATION_TYPE = {
     "Accountants": 0,
     "Cleaning staff": 1,
@@ -74,21 +79,75 @@ YEARS_EMPLOYED_CAT = {
     2: "10+",
 }
 
-
-
 API_BASE_URL = "http://localhost:8000"
-
 requests_session = requests.Session()
 
+def show_feedback_form(user_data=None):
+    """Форма для отправки обратной связи"""
+    st.markdown("---")
+    st.subheader("📝 Provide Feedback on This Decision")
+    
+    with st.form(key='model_feedback_form'):
+        # Автозаполнение данных пользователя, если доступны
+        name = st.text_input("Your Name", value=user_data.get("user", {}).get("name", "") if user_data else "")
+        email = st.text_input("Your Email", value=user_data.get("user", {}).get("email", "") if user_data else "")
+        
+        feedback_type = st.selectbox(
+            "Type of Feedback",
+            options=[
+                "Incorrect decision",
+                "Problem with feature importance",
+                "Model accuracy issue",
+                "Data privacy concern",
+                "Other"
+            ]
+        )
+        
+        feedback_details = st.text_area(
+            "Detailed Feedback",
+            placeholder="Please describe your experience or concern in detail...",
+            height=150
+        )
+        
+        submitted = st.form_submit_button("Submit Feedback")
+        
+        if submitted:
+            if not feedback_details:
+                st.error("Please provide detailed feedback")
+            else:
+                try:
+                    feedback_data = {
+                        "name": name,
+                        "email": email,
+                        "type": feedback_type,
+                        "details": feedback_details,
+                        "application_data": user_data if user_data else None
+                    }
+                    
+                    response = requests_session.post(
+                        f"{API_BASE_URL}/submit_feedback",
+                        json=feedback_data
+                    )
+                    
+                    if response.status_code == 200:
+                        st.success("Thank you for your feedback! We'll review it and improve our service.")
+                    else:
+                        st.error("Failed to submit feedback. Please try again later.")
+                except Exception as e:
+                    st.error(f"Connection error: {str(e)}")
+
+# Основной код приложения
 if "page" not in st.session_state:
     st.session_state["page"] = "greetings"
+    st.session_state["show_feedback"] = False
+    st.session_state["application_data"] = None
 
 if st.session_state["page"] == "greetings":
     greetings_page()
 elif st.session_state["page"] == "main":
     st.title("💳 Credit Scoring Assessment")
 
-    if st.button("Home"):
+    if st.button("🏠 Home"):
         st.session_state["page"] = "greetings"
         st.rerun()
 
@@ -108,11 +167,11 @@ elif st.session_state["page"] == "main":
 
         with col1:
             name = st.text_input("Full Name")
+            code_gender = st.selectbox("Gender", options=[0, 1], format_func=lambda x: "Male" if x == 1 else "Female")
             flag_own_car = st.selectbox("Owns a Car", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             flag_own_realty = st.selectbox("Owns Realty", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             cnt_children = st.number_input("Number of Children", min_value=0, value=0)
             amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000)
-            cnt_family_members = st.number_input("Number of Family Members", min_value=1, value=1)
 
         with col2:
             email = st.text_input("Email")
@@ -120,6 +179,7 @@ elif st.session_state["page"] == "main":
             code_education_type = st.selectbox("Education Type", options=list(CODE_EDUCATION_TYPE.keys()))
             code_family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()))
             code_housing_type = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
+            cnt_family_members = st.number_input("Number of Family Members", min_value=1, value=1)
 
         age_group = st.selectbox("Age Group", options=list(AGE_GROUPS.keys()), format_func=lambda x: AGE_GROUPS[x])
         years_employed_cat = st.selectbox("Years Employed", options=list(YEARS_EMPLOYED_CAT.keys()), format_func=lambda x: YEARS_EMPLOYED_CAT[x])
@@ -128,7 +188,6 @@ elif st.session_state["page"] == "main":
         submitted = st.form_submit_button("Evaluate Credit Score")
 
     if submitted:
-        print(age_group, code_education_type)
         input_payload = {
             "user": {
                 "name": name,
@@ -148,6 +207,8 @@ elif st.session_state["page"] == "main":
             "cnt_family_members": cnt_family_members
         }
 
+        st.session_state["application_data"] = input_payload
+
         with st.spinner("Evaluating..."):
             predict_response = requests_session.post(f"{API_BASE_URL}/predict", json=input_payload)
             result = predict_response.json()
@@ -163,7 +224,7 @@ elif st.session_state["page"] == "main":
                 st.error("❌ Likely Declined")
 
             requests_session.post(
-                f"{API_BASE_URL}/update_settings",
+                f"{API_BASE_URL}/update-settings",
                 params={
                     "store_data": True
                 }
@@ -173,7 +234,6 @@ elif st.session_state["page"] == "main":
                 f"{API_BASE_URL}/store_user_data",
                 json=input_payload
             )
-
 
             explain_response = requests_session.post(
                 f"{API_BASE_URL}/explain",
@@ -187,3 +247,13 @@ elif st.session_state["page"] == "main":
             importances.plot(kind='barh', color=['#27ae60' if v > 0 else '#c0392b' for v in importances.values], ax=ax)
             ax.set_xlabel("Importance")
             st.pyplot(fig)
+            
+            st.session_state["show_feedback"] = True
+
+    # Показываем форму обратной связи если нужно
+    if st.session_state.get("show_feedback") and st.session_state.get("application_data"):
+        show_feedback_form(st.session_state["application_data"])
+        
+        if st.button("← Back to Results"):
+            st.session_state["show_feedback"] = False
+            st.rerun()
