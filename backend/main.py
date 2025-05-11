@@ -16,12 +16,4 @@ async def startup_envents(app: FastAPI):
 
 app = FastAPI(docs_url="/", lifespan=startup_envents)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8501"],  # Streamlit frontend origin
-    allow_credentials=True,  # Allow cookies to be sent
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
-)
-
 app.include_router(router)

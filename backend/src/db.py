@@ -25,3 +25,7 @@ class ShelveDB:
     def list_keys(self):
         with shelve.open(os.path.join(self.db_path, self.db_name)) as db:
             return list(db.keys())
+        
+    def read_all(self):
+        with shelve.open(os.path.join(self.db_path, self.db_name)) as db:
+            return dict(db)
