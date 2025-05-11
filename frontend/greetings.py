@@ -16,9 +16,8 @@ def greetings_page():
 
     After receiving the model's prediction, you can contact a manager to discuss your credit options. The final decision is made by the manager, not the model.
     """)
-    # st.image("https://via.placeholder.com/800x400.png?text=Credit+Scoring+App", use_container_width=True)
-
-    # Add a "Get Started" button
-    if st.button("Get Started"):
-        st.session_state["page"] = "main"
+    
+    # Добавляем key к кнопке
+    if st.button("Get Started", key="greetings_get_started_btn"):
+        st.session_state["page"] = "consent"
         st.rerun()
