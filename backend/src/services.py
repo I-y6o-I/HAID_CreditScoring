@@ -1,8 +1,7 @@
-from backend.src.schemas import PredictionRequest
+from backend.src.schemas import PredictionRequest, User
 from model.xgboost_classifier import XGBoostModel
-from backend.src.utils import preprocess_input
+from backend.src.utils import preprocess_input, hash_user_key
 from backend.src.db import ShelveDB
-
 
 class PredictCreditService:
     def __init__(self, model: XGBoostModel):
@@ -30,7 +29,8 @@ class UserDataService:
         self._db = db
     
     def store_data(self, data: PredictionRequest):
-        user_key = data.user.model_dump_json()
+        user: User = data.user
+        user_key = hash_user_key(user.name, user.email)
 
         value_data = data.model_dump()
         value_data.pop("user")
