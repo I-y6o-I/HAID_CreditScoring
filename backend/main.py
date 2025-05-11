@@ -4,7 +4,7 @@ from model.xgboost_classifier import XGBoostModel
 from backend.src.handlers import router
 from backend.src.db import ShelveDB
 from fastapi.middleware.cors import CORSMiddleware
-
+import frontend
 
 
 @asynccontextmanager

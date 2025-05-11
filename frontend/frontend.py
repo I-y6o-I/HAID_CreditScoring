@@ -6,6 +6,51 @@ import matplotlib.pyplot as plt
 from greetings import greetings_page
 import json
 
+COLORS = {
+    "primary": "#3498db",
+    "secondary": "#2ecc71",
+    "danger": "#e74c3c",
+    "warning": "#f39c12",
+    "dark": "#2c3e50",
+    "light": "#ecf0f1",
+    "text": "#333333",
+    "background": "#f8f9fa"
+}
+def set_global_styles():
+    st.markdown("""
+    <style>
+        /* Основные стили текста */
+        body {
+            color: #333333 !important;
+        }
+        
+        /* Заголовки */
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50 !important;
+        }
+        
+        /* Обычный текст */
+        .stMarkdown, .stText {
+            color: #333333 !important;
+        }
+        
+        /* Карточки и блоки */
+        .stContainer, .stExpander {
+            background-color: #f8f9fa !important;
+            padding: 15px !important;
+            border-radius: 10px !important;
+            margin-bottom: 15px !important;
+        }
+        
+        /* Формы */
+        .stForm {
+            background-color: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 10px !important;
+            padding: 20px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 # Конфигурация страницы
 st.set_page_config(
     page_title="Credit Scoring AI",
@@ -146,7 +191,7 @@ def data_consent_page():
                     st.error("Error saving your preference")
             except:
                 st.error("Could not connect to server")
-                
+
 def main_page():
     st.title("💳 Credit Scoring Assessment")
     

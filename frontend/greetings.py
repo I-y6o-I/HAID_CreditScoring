@@ -1,6 +1,22 @@
 import streamlit as st
 
 def greetings_page():
+    st.markdown("""
+    <style>
+        .welcome-header {
+            color: #2c3e50 !important;
+            text-align: center;
+        }
+        .feature-card {
+            background-color: #f8f9fa !important;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<h1 class="welcome-header">Welcome to the Credit Scoring App</h1>', unsafe_allow_html=True)
     st.title("Welcome to the Credit Scoring App")
     st.markdown("""
     ## Why do we help?
