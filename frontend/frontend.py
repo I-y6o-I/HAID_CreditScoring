@@ -160,20 +160,54 @@ import requests
 API_BASE_URL = "http://localhost:8000"
 
 def data_consent_page():
-    st.title("🔒 Data Consent")
+    st.markdown("""
+    <style>
+        .consent-container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            max-width: 800px;
+        }
+        .consent-header {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .consent-question {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        .consent-option {
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="consent-container">', unsafe_allow_html=True)
+    st.markdown('<h2 class="consent-header">🔒 Data Consent</h2>', unsafe_allow_html=True)
+    
     st.markdown("""
     <div class="feature-card">
         To improve our service, we'd like to store your application data anonymously. 
         This helps us make our model fairer and more accurate over time.
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown('<p class="consent-question">Do you agree to store your data anonymously?</p>', unsafe_allow_html=True)
     
-    # Добавляем уникальный key к радио-кнопкам
     consent = st.radio(
-        "Do you agree to store your data anonymously?",
+        "",
         options=["Yes", "No"],
         index=None,
-        key="data_consent_radio"  # Уникальный идентификатор
+        key="data_consent_radio",
+        format_func=lambda x: f'<div class="consent-option">{x}</div>',
+        unsafe_allow_html=True
     )
     
     if consent is not None:
@@ -191,11 +225,37 @@ def data_consent_page():
                     st.error("Error saving your preference")
             except:
                 st.error("Could not connect to server")
-
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 def main_page():
+    st.markdown("""
+    <style>
+        .form-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-header {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        .form-footer {
+            margin-top: 1.5rem;
+        }
+        .stTextInput>div>div>input {
+            background-color: #f8f9fa;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.title("💳 Credit Scoring Assessment")
     
-    # Навигация
     cols = st.columns([1,1,1,1])
     with cols[0]:
         if st.button("🏠 Home"):
@@ -206,42 +266,41 @@ def main_page():
             st.session_state["page"] = "report"
             st.rerun()
     
-    st.markdown("""
-    <div class="feature-card">
-        Enter your financial and personal information to evaluate your credit approval chances. 
-        The app uses an AI model to predict the outcome and explain which factors influenced it.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    with st.form("credit_form"):
-        st.subheader("🔍 Personal Information")
-        col1, col2 = st.columns(2)
+    with st.container():
+        st.markdown('<div class="form-container">', unsafe_allow_html=True)
         
-        with col1:
-            name = st.text_input("Full Name")
-            gender = st.selectbox("Gender", options=["Male", "Female"])
-            age = st.slider("Age", 18, 70, 30)
-            education = st.selectbox("Education Level", options=list(CODE_EDUCATION_TYPE.keys()))
-            family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()))
+        with st.form("credit_form"):
+            st.markdown('<h3 class="form-header">🔍 Personal Information</h3>', unsafe_allow_html=True)
             
-        with col2:
-            email = st.text_input("Email")
-            income = st.number_input("Annual Income ($)", min_value=0, value=50000)
-            income_type = st.selectbox("Income Source", options=list(CODE_INCOME_TYPE.keys()))
-            housing = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
-            family_members = st.number_input("Family Members", min_value=1, value=1)
+            col1, col2 = st.columns(2)
+            with col1:
+                name = st.text_input("Full Name")
+                gender = st.selectbox("Gender", options=["Male", "Female"])
+                age = st.slider("Age", 18, 70, 30)
+                
+            with col2:
+                email = st.text_input("Email")
+                income = st.number_input("Annual Income ($)", min_value=0, value=50000)
+                income_type = st.selectbox("Income Source", options=list(CODE_INCOME_TYPE.keys()))
+            
+            st.markdown('<h3 class="form-header">Additional Information</h3>', unsafe_allow_html=True)
+            
+            col3, col4 = st.columns(2)
+            with col3:
+                education = st.selectbox("Education Level", options=list(CODE_EDUCATION_TYPE.keys()))
+                family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()))
+                owns_car = st.checkbox("Owns a Car")
+                
+            with col4:
+                housing = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
+                occupation = st.selectbox("Occupation", options=list(CODE_OCCUPATION_TYPE.keys()))
+                owns_realty = st.checkbox("Owns Property")
+            
+            st.markdown('<div class="form-footer">', unsafe_allow_html=True)
+            submitted = st.form_submit_button("Evaluate Credit Score")
+            st.markdown('</div>', unsafe_allow_html=True)
         
-        st.subheader("🔍 Additional Information")
-        col3, col4 = st.columns(2)
-        with col3:
-            children = st.number_input("Number of Children", min_value=0, value=0)
-            owns_car = st.checkbox("Owns a Car")
-            owns_realty = st.checkbox("Owns Property")
-        with col4:
-            occupation = st.selectbox("Occupation", options=list(CODE_OCCUPATION_TYPE.keys()))
-            experience = st.slider("Work Experience (years)", 0, 50, 5)
-        
-        submitted = st.form_submit_button("Evaluate Credit Score")
+        st.markdown('</div>', unsafe_allow_html=True)
     
     if submitted:
         input_payload = {
