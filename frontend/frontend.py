@@ -108,11 +108,11 @@ elif st.session_state["page"] == "main":
 
         with col1:
             name = st.text_input("Full Name")
-            code_gender = st.selectbox("Gender", options=[0, 1], format_func=lambda x: "Male" if x == 1 else "Female")
             flag_own_car = st.selectbox("Owns a Car", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             flag_own_realty = st.selectbox("Owns Realty", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
             cnt_children = st.number_input("Number of Children", min_value=0, value=0)
             amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000)
+            cnt_family_members = st.number_input("Number of Family Members", min_value=1, value=1)
 
         with col2:
             email = st.text_input("Email")
@@ -120,7 +120,6 @@ elif st.session_state["page"] == "main":
             code_education_type = st.selectbox("Education Type", options=list(CODE_EDUCATION_TYPE.keys()))
             code_family_status = st.selectbox("Family Status", options=list(CODE_FAMILY_STATUS.keys()))
             code_housing_type = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
-            cnt_family_members = st.number_input("Number of Family Members", min_value=1, value=1)
 
         age_group = st.selectbox("Age Group", options=list(AGE_GROUPS.keys()), format_func=lambda x: AGE_GROUPS[x])
         years_employed_cat = st.selectbox("Years Employed", options=list(YEARS_EMPLOYED_CAT.keys()), format_func=lambda x: YEARS_EMPLOYED_CAT[x])
@@ -129,6 +128,7 @@ elif st.session_state["page"] == "main":
         submitted = st.form_submit_button("Evaluate Credit Score")
 
     if submitted:
+        print(age_group, code_education_type)
         input_payload = {
             "user": {
                 "name": name,
@@ -163,7 +163,7 @@ elif st.session_state["page"] == "main":
                 st.error("❌ Likely Declined")
 
             requests_session.post(
-                f"{API_BASE_URL}/update-settings",
+                f"{API_BASE_URL}/update_settings",
                 params={
                     "store_data": True
                 }

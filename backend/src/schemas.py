@@ -43,6 +43,12 @@ class PredictionResponse(BaseModel):
     proba: float
 
 
-class CreditApplication(User):
+class CreditApplication(BaseModel):
+    user: User
+    text: str
+
+
+class ModelReport(BaseModel):
+    user: User
     text: str
     
