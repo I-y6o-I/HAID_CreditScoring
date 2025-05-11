@@ -54,6 +54,26 @@ CODE_OCCUPATION_TYPE = {
     "Waiters/barmen staff": 17,
 }
 
+AGE_GROUPS = {
+    0: "18-22",
+    1: "23-29",
+    2: "30-34",
+    3: "35-39",
+    4: "40-44",
+    5: "45-49",
+    6: "50-54",
+    7: "55-59",
+    8: "60-64",
+    9: "65-69",
+}
+
+YEARS_EMPLOYED_CAT = {
+    0: "0",
+    1: "1-3",
+    3: "4-10",
+    2: "10+",
+}
+
 
 
 API_BASE_URL = "http://localhost:8000"
@@ -102,8 +122,8 @@ elif st.session_state["page"] == "main":
             code_housing_type = st.selectbox("Housing Type", options=list(CODE_HOUSING_TYPE.keys()))
             cnt_family_members = st.number_input("Number of Family Members", min_value=1, value=1)
 
-        days_birth = st.slider("Age (in Days)", min_value=-36500, max_value=-6570, value=-10950)  # Example: -10950 = 30 years
-        days_employed = st.slider("Days Employed", min_value=-20000, max_value=0, value=-3650)  # Example: -3650 = 10 years
+        age_group = st.selectbox("Age Group", options=list(AGE_GROUPS.keys()), format_func=lambda x: AGE_GROUPS[x])
+        years_employed_cat = st.selectbox("Years Employed", options=list(YEARS_EMPLOYED_CAT.keys()), format_func=lambda x: YEARS_EMPLOYED_CAT[x])
         code_occupation_type = st.selectbox("Occupation Type", options=list(CODE_OCCUPATION_TYPE.keys()))
 
         submitted = st.form_submit_button("Evaluate Credit Score")
@@ -114,7 +134,6 @@ elif st.session_state["page"] == "main":
                 "name": name,
                 "email": email
             },
-            "code_gender": code_gender,
             "flag_own_car": flag_own_car,
             "flag_own_realty": flag_own_realty,
             "cnt_children": cnt_children,
@@ -123,8 +142,8 @@ elif st.session_state["page"] == "main":
             "code_education_type": CODE_EDUCATION_TYPE[code_education_type],
             "code_family_status": CODE_FAMILY_STATUS[code_family_status],
             "code_housing_type": CODE_HOUSING_TYPE[code_housing_type],
-            "days_birth": days_birth,
-            "days_employed": days_employed,
+            "age_group": age_group,
+            "years_employed_cat": years_employed_cat,
             "code_occupation_type": CODE_OCCUPATION_TYPE[code_occupation_type],
             "cnt_family_members": cnt_family_members
         }

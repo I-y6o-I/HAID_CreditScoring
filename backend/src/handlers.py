@@ -37,7 +37,6 @@ async def store_user_data(
 ):
     try:
         store_data = fastapi_request.cookies.get("store_data", "false").lower() == "true"
-        print(fastapi_request.cookies.get("store_data"))
         if store_data:
             user_data_service.store_data(request)
             return {"message": "Data stored"}
