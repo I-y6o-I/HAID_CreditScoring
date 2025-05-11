@@ -2,11 +2,16 @@ from pydantic import BaseModel
 import typing as tp
 
 
+class User(BaseModel):
+    name: str
+    email: str
+
+
 class PredictionRequest(BaseModel):
-    code_gender: int
-    days_birth: int
+    user: User
+    age_group: int
     amt_income_total: int
-    days_employed: int
+    years_employed_cat: int
     flag_own_car: bool
     flag_own_realty: bool
     code_income_type: int
@@ -19,10 +24,9 @@ class PredictionRequest(BaseModel):
 
 
 class FeatureExplainLevels(BaseModel):
-    code_gender: int
-    days_birth: int
+    age_group: int
     amt_income_total: int
-    days_employed: int
+    years_employed_cat: int
     flag_own_car: int
     flag_own_realty: int
     code_income_type: int
@@ -37,4 +41,9 @@ class FeatureExplainLevels(BaseModel):
 class PredictionResponse(BaseModel):
     pred: int
     proba: float
+
+
+class CreditApplication(BaseModel):
+    user: User
+    text: str
     

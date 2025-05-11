@@ -1,5 +1,6 @@
 ./model/credit-card-approval-prediction-using-ml.ipynb
 test.py
+test.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
