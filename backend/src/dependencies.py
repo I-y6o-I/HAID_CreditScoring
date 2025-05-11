@@ -12,3 +12,6 @@ def get_user_data_service(request: Request) -> services.UserDataService:
 
 def get_credit_application_service(request: Request) -> services.CreditApplicationService:
     return services.CreditApplicationService(db=request.app.state.credit_application_db)
+
+def get_report_model_service(request: Request) -> services.ReportModelService:
+    return services.ReportModelService(db=request.app.state.model_report_db)

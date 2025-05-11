@@ -46,4 +46,9 @@ class PredictionResponse(BaseModel):
 class CreditApplication(BaseModel):
     user: User
     text: str
+
+
+class ModelReport(BaseModel):
+    user: User
+    text: str
     

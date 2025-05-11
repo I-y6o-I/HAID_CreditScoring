@@ -1,37 +1,37 @@
 from fastapi import APIRouter, Form, Depends, HTTPException, Request, Response
-from backend.src.schemas import PredictionRequest, PredictionResponse, FeatureExplainLevels, CreditApplication
 from backend.src import services
 from backend.src import dependencies
+from backend.src import schemas
 
 router = APIRouter(tags=["Model"])
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post("/predict", response_model=schemas.PredictionResponse)
 async def predict_credit_approve(
-    request: PredictionRequest,
+    request: schemas.PredictionRequest,
     predict_service: services.PredictCreditService = Depends(dependencies.get_predict_credit_service),
-) -> PredictionResponse:
+) -> schemas.PredictionResponse:
     try:
         pred, proba = predict_service.predict(request)
-        return PredictionResponse(pred=pred, proba=proba)
+        return schemas.PredictionResponse(pred=pred, proba=proba)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.post("/explain", response_model=FeatureExplainLevels)
+@router.post("/explain", response_model=schemas.FeatureExplainLevels)
 async def predict_credit_approve(
-    request: PredictionRequest,
+    request: schemas.PredictionRequest,
     explain_service: services.ExplainResultsService = Depends(dependencies.get_explain_results_service)
-) -> FeatureExplainLevels:
+) -> schemas.FeatureExplainLevels:
     try:
         importance_levels = explain_service.explain_prediction(request)
-        return FeatureExplainLevels(**importance_levels)
+        return schemas.FeatureExplainLevels(**importance_levels)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 
 @router.post("/store_user_data")
 async def store_user_data(
-    request: PredictionRequest,
+    request: schemas.PredictionRequest,
     fastapi_request: Request,
     user_data_service: services.UserDataService = Depends(dependencies.get_user_data_service)
 ):
@@ -48,7 +48,7 @@ async def store_user_data(
 
 @router.post("/create_application")
 async def create_application(
-    request: CreditApplication,
+    request: schemas.CreditApplication,
     credit_application_service: services.CreditApplicationService = Depends(dependencies.get_credit_application_service)
 ):
     try:
@@ -56,9 +56,21 @@ async def create_application(
         return {"message": "Application created"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/report_model")
+async def report_model(
+    request: schemas.ModelReport,
+    report_model_service: services.ReportModelService = Depends(dependencies.get_report_model_service)
+):
+    try:
+        report_model_service.report_model(request)
+        return {"message": "Report created"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/update-settings")
+@router.post("/update_settings")
 async def update_settings(store_data: bool, response: Response):
     response.set_cookie(key="store_data", value=str(store_data).lower(), httponly=False, secure=False, samesite="Lax")
     return {"message": "Settings updated successfully", "store_data": store_data}
