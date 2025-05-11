@@ -91,75 +91,76 @@ st.set_page_config(
 )
 
 def plot_feature_importance(importances):
-    """Feature importance visualization with seamless Streamlit integration"""
-    # Color scheme matching Streamlit's theme
-    BG_COLOR = "#f0f2f6"  # Streamlit's background color
-    TEXT_COLOR = "#262730"  # Text color
-    POS_COLOR = "#21c354"  # Green for positive impact
-    NEG_COLOR = "#ff2b2b"  # Red for negative impact
-    GRID_COLOR = "#d0d0d7"  # Grid lines color
-    BAR_EDGE = "#e6e9ef"    # Bar edge color
+    """Dark theme feature importance visualization for Streamlit"""
+    # Dark theme color scheme
+    BG_COLOR = "#0e1117"       # Streamlit dark background
+    WIDGET_BG = "#262730"      # Streamlit widget background
+    TEXT_COLOR = "#fafafa"     # Light text for contrast
+    PRIMARY = "#ff4b4b"        # Streamlit red
+    SECONDARY = "#21c354"      # Streamlit green
+    GRID_COLOR = "#555555"     # Dark grid lines
+    BAR_EDGE = "#444444"       # Bar edge color
 
-    # Create figure with correct background settings
-    plt.style.use('default')
+    # Create figure with dark theme
+    plt.style.use('dark_background')
     fig = plt.figure(figsize=(10, 6), facecolor=BG_COLOR, dpi=100)
-    ax = fig.add_subplot(facecolor=BG_COLOR)
-
-    # Human-readable feature names
+    ax = fig.add_subplot(facecolor=WIDGET_BG)
+    
+    # Feature name mappings
     feature_names = {
         'amt_income_total': 'Annual Income',
         'code_income_type': 'Income Type',
         'code_education_type': 'Education',
         'age_group': 'Age Group',
-        'years_employed_cat': 'Employment Duration',
-        'cnt_family_members': 'Family Members',
-        'cnt_children': 'Number of Children',
+        'years_employed_cat': 'Employment',
+        'cnt_family_members': 'Family Size',
+        'cnt_children': 'Children',
         'flag_own_realty': 'Owns Property',
         'flag_own_car': 'Owns Car',
         'code_family_status': 'Marital Status',
-        'code_housing_type': 'Housing Type',
+        'code_housing_type': 'Housing',
         'code_occupation_type': 'Occupation'
     }
 
-    # Prepare dataframe
+    # Prepare data
     df = pd.DataFrame({
         'Factor': [feature_names.get(col, col) for col in importances.index],
         'Impact': importances.values,
-        'Effect': ['Increases' if x > 0 else 'Decreases' for x in importances.values]
+        'Effect': ['Positive' if x > 0 else 'Negative' for x in importances.values]
     }).sort_values('Impact', key=abs, ascending=False)
 
-    # Create the bar plot
+    # Create plot with dark theme styling
     sns.barplot(
         data=df,
         x='Impact',
         y='Factor',
         hue='Effect',
-        palette={'Increases': POS_COLOR, 'Decreases': NEG_COLOR},
+        palette={'Positive': SECONDARY, 'Negative': PRIMARY},
         ax=ax,
         dodge=False,
-        linewidth=0.5,
-        edgecolor=BAR_EDGE
+        linewidth=0.8,
+        edgecolor=BAR_EDGE,
+        saturation=0.9
     )
 
-    # Styling
-    ax.set_title('Key Decision Factors', 
+    # Dark theme styling
+    ax.set_title('Credit Decision Factors', 
                 pad=20, fontsize=14, color=TEXT_COLOR, fontweight='bold')
     ax.set_xlabel('Impact Score', fontsize=12, color=TEXT_COLOR)
-    ax.set_ylabel('')  # Remove y-label as factors are self-explanatory
-
-    # Customize ticks and spines
-    ax.tick_params(axis='both', colors=TEXT_COLOR)
+    ax.set_ylabel('')
+    
+    # Customize appearance
+    ax.tick_params(axis='both', colors=TEXT_COLOR, labelsize=10)
     for spine in ax.spines.values():
         spine.set_color(GRID_COLOR)
-
-    # Add zero line and grid
-    ax.axvline(0, color=TEXT_COLOR, linestyle='--', linewidth=0.8, alpha=0.7)
-    ax.grid(axis='x', color=GRID_COLOR, linestyle=':', linewidth=0.5, alpha=0.6)
+    
+    ax.axvline(0, color=TEXT_COLOR, linestyle='--', linewidth=1.0, alpha=0.8)
+    ax.grid(axis='x', color=GRID_COLOR, linestyle=':', linewidth=0.7, alpha=0.8)
 
     # Legend styling
     legend = ax.legend(
         title='Impact Direction',
-        facecolor=BG_COLOR,
+        facecolor=WIDGET_BG,
         edgecolor=GRID_COLOR,
         title_fontsize=10,
         fontsize=9,
