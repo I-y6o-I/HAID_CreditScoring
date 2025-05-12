@@ -16,5 +16,11 @@ async def startup_envents(app: FastAPI):
     yield
 
 app = FastAPI(docs_url="/", lifespan=startup_envents)
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8501", "http://localhost:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(router)

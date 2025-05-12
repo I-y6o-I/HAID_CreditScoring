@@ -81,6 +81,7 @@ EMPLOYMENT_DURATION = {
 
 API_BASE_URL = "http://localhost:8000"
 requests_session = requests.Session()
+requests_session.headers.update({"Connection": "keep-alive"})
 
 st.set_page_config(
     page_title="Credit Scoring System",
@@ -220,6 +221,22 @@ def show_feedback_form(user_data=None):
                     st.error(f"Connection error: {str(e)}")
 
 
+def settings_page():
+    st.title("⚙️ Settings")
+    st.subheader("Manage Your Preferences")
+    
+    store_data = st.radio(
+        "Do you want to help improve our service and share your data?",
+        options=["No", "Yes"],
+        index=1 if st.session_state.get("store_data", "Yes") == "Yes" else 0
+    )
+    
+    if st.button("Save"):
+        st.session_state["store_data"] = store_data
+        st.success("Settings saved!")
+        st.session_state["page"] = "main"
+        st.rerun()
+
 if "page" not in st.session_state:
     st.session_state["page"] = "greetings"
     st.session_state["show_feedback"] = False
@@ -227,6 +244,8 @@ if "page" not in st.session_state:
 
 if st.session_state["page"] == "greetings":
     greetings_page()
+elif st.session_state["page"] == "settings":
+    settings_page()
 elif st.session_state["page"] == "main":
     col1, col2, col3 = st.columns([1, 6.5, 1])
     with col1:
@@ -243,11 +262,8 @@ elif st.session_state["page"] == "main":
             )
             if st.button("Save"):
                 st.session_state["store_data"] = store_data
-                requests_session.post(
-                    f"{API_BASE_URL}/update_settings",
-                    params={"store_data": st.session_state.get("store_data", "Yes") == "Yes"}
-                )
                 st.success("Settings saved!")
+
 
 
     st.title("💳 Credit Scoring Assessment")
@@ -324,6 +340,10 @@ elif st.session_state["page"] == "main":
             else:
                 st.error("❌ Likely Declined")
 
+            requests_session.post(
+                f"{API_BASE_URL}/update_settings",
+                params={"store_data": st.session_state.get("store_data", "Yes") == "Yes"}
+            )
             requests_session.post(f"{API_BASE_URL}/store_user_data", json=input_payload)
 
             explain_response = requests_session.post(f"{API_BASE_URL}/explain", json=input_payload)

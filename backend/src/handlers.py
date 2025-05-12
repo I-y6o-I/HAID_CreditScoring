@@ -37,6 +37,7 @@ async def store_user_data(
 ):
     try:
         store_data = fastapi_request.cookies.get("store_data", "false").lower() == "true"
+        print("store", fastapi_request.cookies.get("store_data"))
         if store_data:
             user_data_service.store_data(request)
             return {"message": "Data stored"}
@@ -72,5 +73,5 @@ async def report_model(
 
 @router.post("/update_settings")
 async def update_settings(store_data: bool, response: Response):
-    response.set_cookie(key="store_data", value=str(store_data).lower(), httponly=False, secure=False, samesite="Lax")
+    response.set_cookie(key="store_data", value=str(store_data).lower(), httponly=True, secure=False, samesite="None")
     return {"message": "Settings updated successfully", "store_data": store_data}

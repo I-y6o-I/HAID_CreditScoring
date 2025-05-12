@@ -20,5 +20,5 @@ def greetings_page():
 
     # Add a "Get Started" button
     if st.button("Get Started"):
-        st.session_state["page"] = "main"
+        st.session_state["page"] = "settings"
         st.rerun()
