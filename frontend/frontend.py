@@ -163,6 +163,8 @@ def plot_feature_importance(importances):
 
     plt.tight_layout()
     return fig
+
+
 def show_feedback_form(user_data=None):
     """Feedback submission form"""
     st.markdown("---")
@@ -197,15 +199,16 @@ def show_feedback_form(user_data=None):
             else:
                 try:
                     feedback_data = {
-                        "name": name,
-                        "email": email,
-                        "type": feedback_type,
-                        "details": feedback_details,
-                        "application_data": user_data if user_data else None
+                        "user": {
+                            "name": name,
+                            "email": email,
+                        },
+                        "issue_type": feedback_type,
+                        "text": feedback_details,
                     }
                     
                     response = requests_session.post(
-                        f"{API_BASE_URL}/submit_feedback",
+                        f"{API_BASE_URL}/report_model",
                         json=feedback_data
                     )
                     
@@ -216,6 +219,7 @@ def show_feedback_form(user_data=None):
                 except Exception as e:
                     st.error(f"Connection error: {str(e)}")
 
+
 if "page" not in st.session_state:
     st.session_state["page"] = "greetings"
     st.session_state["show_feedback"] = False
@@ -224,13 +228,29 @@ if "page" not in st.session_state:
 if st.session_state["page"] == "greetings":
     greetings_page()
 elif st.session_state["page"] == "main":
-    col1, col2 = st.columns([1, 10])
+    col1, col2, col3 = st.columns([1, 6.5, 1])
     with col1:
         if st.button("🏠 Home"):
             st.session_state["page"] = "greetings"
             st.rerun()
-    with col2:
-        st.title("💳 Credit Scoring Assessment")
+    with col3:
+        with st.popover(label="⚙️ Settings"):
+            st.subheader("Settings")
+            store_data = st.radio(
+                "Do you want to help improve our service and share your data?",
+                options=["No", "Yes"],
+                index=1 if st.session_state.get("store_data", "Yes") == "Yes" else 0
+            )
+            if st.button("Save"):
+                st.session_state["store_data"] = store_data
+                requests_session.post(
+                    f"{API_BASE_URL}/update_settings",
+                    params={"store_data": st.session_state.get("store_data", "Yes") == "Yes"}
+                )
+                st.success("Settings saved!")
+
+
+    st.title("💳 Credit Scoring Assessment")
 
     st.markdown("""
     <p style='font-size: 18px; color: #7f8c8d;'>
@@ -313,14 +333,6 @@ elif st.session_state["page"] == "main":
             plt = plot_feature_importance(explanation)
             st.pyplot(plt)
             
-            st.markdown("""
-            <div style="background-color:#f8f9fa; padding:10px; border-radius:5px; margin-top:10px">
-            <small>
-            <b>How to read:</b> Factors sorted by impact strength.<br>
-            Green - increases approval chance, Red - decreases.
-            </small>
-            </div>
-            """, unsafe_allow_html=True)
             
             st.session_state["show_feedback"] = True
 
