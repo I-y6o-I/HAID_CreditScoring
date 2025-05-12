@@ -277,7 +277,7 @@ def settings_page():
     store_data = st.radio(
         "Do you want to help improve our service and share your data?",
         options=["No", "Yes"],
-        index=1 if st.session_state.get("store_data", "Yes") == "Yes" else 0
+        index=1 if st.session_state.get("store_data") == "Yes" else 0
     )
     
     if st.button("Save"):
@@ -309,7 +309,7 @@ elif st.session_state["page"] == "main":
             store_data = st.radio(
                 "Do you want to help improve our service and share your data?",
                 options=["No", "Yes"],
-                index=1 if st.session_state.get("store_data", "Yes") == "Yes" else 0
+                index=1 if st.session_state.get("store_data") == "Yes" else 0
             )
             if st.button("Save"):
                 st.session_state["store_data"] = store_data
@@ -335,9 +335,9 @@ elif st.session_state["page"] == "main":
 
         with col1:
             name = st.text_input("Full Name")
-            code_gender = st.selectbox("Gender", options=[0, 1], format_func=lambda x: "Male" if x == 1 else "Female")
-            flag_own_car = st.selectbox("Owns a Car", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
-            flag_own_realty = st.selectbox("Owns Property", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
+            age_group = st.selectbox("Age Group", options=list(AGE_GROUPS.keys()), format_func=lambda x: AGE_GROUPS[x])
+            flag_own_car = st.selectbox("Owns a Car", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No", index=1)
+            flag_own_realty = st.selectbox("Owns Property", options=[0, 1], format_func=lambda x: "Yes" if x == 1 else "No", index=1)
             cnt_children = st.number_input("Number of Children", min_value=0, value=0)
             amt_income_total = st.number_input("Annual Income ($)", min_value=0, value=50000, step=10000)
 
@@ -349,7 +349,6 @@ elif st.session_state["page"] == "main":
             code_housing_type = st.selectbox("Housing Type", options=list(HOUSING_TYPES.keys()))
             cnt_family_members = st.number_input("Family Members", min_value=1, value=1)
 
-        age_group = st.selectbox("Age Group", options=list(AGE_GROUPS.keys()), format_func=lambda x: AGE_GROUPS[x])
         years_employed_cat = st.selectbox("Employment Duration", options=list(EMPLOYMENT_DURATION.keys()), format_func=lambda x: EMPLOYMENT_DURATION[x])
         code_occupation_type = st.selectbox("Occupation", options=list(OCCUPATION_TYPES.keys()))
 
