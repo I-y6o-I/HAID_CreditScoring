@@ -214,7 +214,56 @@ def show_feedback_form(user_data=None):
                     )
                     
                     if response.status_code == 200:
-                        st.success("Thank you! We'll review your feedback.")
+                        st.session_state["show_feedback"] = 2
+                        st.rerun()
+                    else:
+                        st.error("Submission failed. Please try later.")
+                except Exception as e:
+                    st.error(f"Connection error: {str(e)}")
+
+
+def show_credit_form(user_data=None):
+    st.markdown("---")
+    st.subheader("📝 Contact manager and apply for a credit")
+    
+    with st.form(key='application_form'):
+        name = st.text_input("Your Name", value=user_data.get("user", {}).get("name", "") if user_data else "")
+        email = st.text_input("Your Email", value=user_data.get("user", {}).get("email", "") if user_data else "")
+        
+        
+        details = st.text_area(
+            "Details",
+            placeholder="Provide any useful information...",
+            height=150
+        )
+        
+        submitted = st.form_submit_button("Submit Application")
+
+        if st.session_state.get("show_application", 1):
+            st.success("Thank you! Manager will contact you soon!")
+            return
+        
+        if submitted:
+            if not details:
+                st.error("Please provide details")
+            else:
+                try:
+                    feedback_data = {
+                        "user": {
+                            "name": name,
+                            "email": email,
+                        },
+                        "text": details,
+                    }
+                    
+                    response = requests_session.post(
+                        f"{API_BASE_URL}/create_application",
+                        json=feedback_data
+                    )
+                    
+                    if response.status_code == 200:
+                        st.session_state["show_application"] = 1
+                        st.rerun()
                     else:
                         st.error("Submission failed. Please try later.")
                 except Exception as e:
@@ -241,6 +290,8 @@ if "page" not in st.session_state:
     st.session_state["page"] = "greetings"
     st.session_state["show_feedback"] = False
     st.session_state["application_data"] = None
+    st.session_state["show_application"] = 0
+
 
 if st.session_state["page"] == "greetings":
     greetings_page()
@@ -356,9 +407,12 @@ elif st.session_state["page"] == "main":
             
             st.session_state["show_feedback"] = True
 
-    if st.session_state.get("show_feedback") and st.session_state.get("application_data"):
+    if st.session_state.get("show_application") == 0 and st.session_state.get("application_data"):
+        show_credit_form(st.session_state["application_data"])
+    elif st.session_state.get("show_application") == 1:
+        st.success("Thank you! Manager will contact you soon!")
+
+    if st.session_state.get("show_feedback") == 1 and st.session_state.get("application_data"):
         show_feedback_form(st.session_state["application_data"])
-        
-        if st.button("← Back to Results"):
-            st.session_state["show_feedback"] = False
-            st.rerun()
+    if st.session_state.get("show_feedback") == 2:
+        st.success("Thank you! We'll review your feedback.")
